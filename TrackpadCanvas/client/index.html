@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>TrackPad Drawing App</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 20px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+      }
+      
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      
+      h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 2.5em;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      
+      .subtitle {
+        text-align: center;
+        color: #666;
+        margin-bottom: 30px;
+        font-size: 1.1em;
+        font-weight: 400;
+      }
+      
+      canvas {
+        border: 3px solid rgba(255, 255, 255, 0.8);
+        border-radius: 15px;
+        display: block;
+        margin: 20px auto;
+        touch-action: none;
+        cursor: crosshair;
+        background: white;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        transition: box-shadow 0.3s ease;
+      }
+      
+      canvas:hover {
+        box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+      }
+      
+      .controls {
+        text-align: center;
+        margin: 25px auto;
+        padding: 25px;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 25px;
+        flex-wrap: wrap;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+      
+      .control-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      
+      label {
+        font-weight: 500;
+        color: #555;
+      }
+      
+      input[type="color"] {
+        width: 40px;
+        height: 40px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      
+      input[type="range"] {
+        width: 100px;
+      }
+      
+      button {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background-color 0.2s;
+      }
+      
+      .tool-btn {
+        padding: 12px 20px;
+        margin: 0 3px;
+        background: rgba(255, 255, 255, 0.8);
+        color: #333;
+        border: 2px solid transparent;
+        font-size: 14px;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      }
+      
+      .tool-btn:hover {
+        background: rgba(255, 255, 255, 1);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      }
+      
+      .tool-btn.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-color: rgba(255, 255, 255, 0.3);
+        transform: translateY(-1px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+      
+      .action-btn {
+        padding: 12px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        margin: 0 5px;
+      }
+      
+      .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      }
+      
+      #clearBtn {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+        color: white;
+      }
+      
+      #clearBtn:hover {
+        background: linear-gradient(135deg, #ff5252 0%, #d32f2f 100%);
+      }
+      
+      .save-dropdown {
+        position: relative;
+        display: inline-block;
+      }
+      
+      .dropdown-content {
+        display: none;
+        position: absolute;
+        background-color: white;
+        min-width: 200px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        z-index: 1;
+        border-radius: 10px;
+        overflow: hidden;
+        top: 100%;
+        left: 0;
+        margin-top: 5px;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+      
+      .dropdown-content.show {
+        display: block;
+      }
+      
+      .dropdown-content button {
+        color: #333;
+        padding: 12px 16px;
+        text-decoration: none;
+        display: block;
+        width: 100%;
+        text-align: left;
+        background: white;
+        border: none;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      
+      .dropdown-content button:hover {
+        background-color: #f1f1f1;
+      }
+      
+      #saveBtn {
+        background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        color: white;
+      }
+      
+      #saveBtn:hover {
+        background: linear-gradient(135deg, #45a049 0%, #388e3c 100%);
+      }
+      
+      .small-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+        border-radius: 6px;
+        background: #f0f0f0;
+        color: #333;
+        margin-left: 8px;
+        transition: all 0.2s ease;
+      }
+      
+      .small-btn:hover {
+        background: #e0e0e0;
+        transform: translateY(-1px);
+      }
+      
+      .instructions {
+        text-align: center;
+        margin-top: 30px;
+        padding: 25px;
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        color: #555;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+      
+      .instructions h3 {
+        margin-top: 0;
+        color: #333;
+        font-size: 1.3em;
+        margin-bottom: 15px;
+      }
+      
+      .instructions p {
+        line-height: 1.6;
+        font-size: 1.05em;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🎨 TrackPad Drawing App</h1>
+      <p class="subtitle">
+        Optimized for MacBook trackpad - Hold down and drag to draw
+      </p>
+      
+      <canvas id="drawingCanvas" width="1000" height="600"></canvas>
+
+      <div class="controls">
+        <div class="control-group">
+          <label>Tool:</label>
+          <button id="brushBtn" class="tool-btn active">🖌️ Brush</button>
+          <button id="eraserBtn" class="tool-btn">🧹 Eraser</button>
+          <button id="rulerBtn" class="tool-btn">📏 Ruler</button>
+        </div>
+        
+        <div class="control-group">
+          <label for="colorPicker">Brush Color:</label>
+          <input type="color" id="colorPicker" value="#000000" />
+        </div>
+        
+        <div class="control-group">
+          <label for="bgColorPicker">Background:</label>
+          <input type="color" id="bgColorPicker" value="#ffffff" />
+          <button id="clearBgBtn" class="small-btn">Clear</button>
+        </div>
+        
+        <div class="control-group">
+          <label for="brushSize">Size:</label>
+          <input type="range" id="brushSize" min="1" max="30" value="3" />
+          <span id="sizeDisplay">3px</span>
+        </div>
+        
+        <button id="clearBtn" class="action-btn">Clear Canvas</button>
+        <div class="save-dropdown">
+          <button id="saveBtn" class="action-btn">💾 Save Drawing ▼</button>
+          <div id="saveDropdown" class="dropdown-content">
+            <button id="savePNG">📷 Save as PNG</button>
+            <button id="saveJPG">🖼️ Save as JPG</button>
+            <button id="saveWebP">🌐 Save as WebP</button>
+            <button id="saveSVG">📐 Save as SVG</button>
+            <button id="savePDF">📄 Save as PDF</button>
+            <button id="saveHighRes">🔍 Save High Resolution</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="instructions">
+        <h3>How to Use:</h3>
+        <p>• <strong>Brush:</strong> Hold down and drag to draw smooth freehand lines<br>
+        • <strong>Eraser:</strong> Hold down and drag to erase parts of your drawing<br>
+        • <strong>Ruler:</strong> Hold down and drag to draw perfect straight lines<br>
+        • Use the color picker to change colors<br>
+        • Adjust brush/eraser size with the slider (1-30px)<br>
+        • <strong>Save Options:</strong> PNG, JPG, WebP, SVG, PDF-style, or High Resolution</p>
+      </div>
+    </div>
+
+    <script>
+      const canvas = document.getElementById('drawingCanvas');
+      const ctx = canvas.getContext('2d');
+      const colorPicker = document.getElementById('colorPicker');
+      const brushSize = document.getElementById('brushSize');
+      const sizeDisplay = document.getElementById('sizeDisplay');
+      const clearBtn = document.getElementById('clearBtn');
+      const saveBtn = document.getElementById('saveBtn');
+      const brushBtn = document.getElementById('brushBtn');
+      const eraserBtn = document.getElementById('eraserBtn');
+      const rulerBtn = document.getElementById('rulerBtn');
+      const bgColorPicker = document.getElementById('bgColorPicker');
+      const clearBgBtn = document.getElementById('clearBgBtn');
+
+      let isDrawing = false;
+      let lastX = 0;
+      let lastY = 0;
+      let startX = 0;
+      let startY = 0;
+      let currentTool = 'brush';
+      let imageData = null;
+      let points = [];
+      let currentBgColor = '#ffffff';
+      let animationId = null;
+
+      // Set up canvas for smoother drawing with better performance
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.imageSmoothingEnabled = true;
+      
+      // Set initial background
+      function setCanvasBackground(color) {
+        const tempData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = color;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.putImageData(tempData, 0, 0);
+        currentBgColor = color;
+        canvas.style.backgroundColor = color;
+      }
+      
+      // Initialize with white background
+      setCanvasBackground('#ffffff');
+
+      // Optimized position calculation with caching
+      let canvasRect = canvas.getBoundingClientRect();
+      let scaleX = canvas.width / canvasRect.width;
+      let scaleY = canvas.height / canvasRect.height;
+      
+      // Update canvas rect on resize
+      function updateCanvasRect() {
+        canvasRect = canvas.getBoundingClientRect();
+        scaleX = canvas.width / canvasRect.width;
+        scaleY = canvas.height / canvasRect.height;
+      }
+      
+      // Get mouse/touch position relative to canvas (optimized)
+      function getEventPos(e) {
+        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+        
+        return {
+          x: (clientX - canvasRect.left) * scaleX,
+          y: (clientY - canvasRect.top) * scaleY
+        };
+      }
+      
+      // Update canvas rect on window resize
+      window.addEventListener('resize', updateCanvasRect);
+      window.addEventListener('scroll', updateCanvasRect);
+
+      // Tool switching functions
+      function setTool(tool) {
+        currentTool = tool;
+        
+        // Update button states
+        document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+        if (tool === 'brush') brushBtn.classList.add('active');
+        if (tool === 'eraser') eraserBtn.classList.add('active');
+        if (tool === 'ruler') rulerBtn.classList.add('active');
+        
+        // Update cursor
+        if (tool === 'eraser') {
+          canvas.style.cursor = 'crosshair';
+        } else if (tool === 'ruler') {
+          canvas.style.cursor = 'crosshair';
+        } else {
+          canvas.style.cursor = 'crosshair';
+        }
+      }
+
+      // Smooth drawing with quadratic curves
+      function drawSmoothLine(x, y) {
+        if (points.length < 2) return;
+        
+        const p1 = points[points.length - 2];
+        const p2 = points[points.length - 1];
+        
+        // Calculate midpoint for smooth curves
+        const midX = (p1.x + p2.x) / 2;
+        const midY = (p1.y + p2.y) / 2;
+        
+        ctx.quadraticCurveTo(p1.x, p1.y, midX, midY);
+        ctx.stroke();
+      }
+
+      // Drawing functions
+      function startDrawing(e) {
+        isDrawing = true;
+        const pos = getEventPos(e);
+        lastX = pos.x;
+        lastY = pos.y;
+        startX = pos.x;
+        startY = pos.y;
+        points = [pos];
+        
+        if (currentTool === 'brush') {
+          ctx.globalCompositeOperation = 'source-over';
+          ctx.strokeStyle = colorPicker.value;
+          ctx.lineWidth = brushSize.value;
+          ctx.beginPath();
+          ctx.moveTo(lastX, lastY);
+        } else if (currentTool === 'eraser') {
+          ctx.globalCompositeOperation = 'destination-out';
+          ctx.lineWidth = brushSize.value;
+          ctx.beginPath();
+          ctx.moveTo(lastX, lastY);
+        } else if (currentTool === 'ruler') {
+          imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          ctx.strokeStyle = colorPicker.value;
+          ctx.lineWidth = brushSize.value;
+          ctx.globalCompositeOperation = 'source-over';
+        }
+      }
+
+      // Optimized drawing with requestAnimationFrame for better performance
+      function draw(e) {
+        if (!isDrawing) return;
+        
+        const pos = getEventPos(e);
+        
+        if (currentTool === 'brush' || currentTool === 'eraser') {
+          points.push(pos);
+          
+          // Cancel previous animation frame to prevent lag
+          if (animationId) {
+            cancelAnimationFrame(animationId);
+          }
+          
+          animationId = requestAnimationFrame(() => {
+            if (points.length > 3) {
+              // Use quadratic curves for smoother lines
+              const p1 = points[points.length - 3];
+              const p2 = points[points.length - 2];
+              const p3 = points[points.length - 1];
+              
+              const midX1 = (p1.x + p2.x) / 2;
+              const midY1 = (p1.y + p2.y) / 2;
+              const midX2 = (p2.x + p3.x) / 2;
+              const midY2 = (p2.y + p3.y) / 2;
+              
+              ctx.quadraticCurveTo(midX1, midY1, midX2, midY2);
+              ctx.stroke();
+            } else {
+              // For first few points, use regular lines
+              ctx.lineTo(pos.x, pos.y);
+              ctx.stroke();
+            }
+            
+            lastX = pos.x;
+            lastY = pos.y;
+          });
+        } else if (currentTool === 'ruler') {
+          // Cancel previous animation frame
+          if (animationId) {
+            cancelAnimationFrame(animationId);
+          }
+          
+          animationId = requestAnimationFrame(() => {
+            ctx.putImageData(imageData, 0, 0);
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+          });
+        }
+      }
+
+      function stopDrawing() {
+        if (!isDrawing) return;
+        isDrawing = false;
+        
+        // Cancel any pending animation frame
+        if (animationId) {
+          cancelAnimationFrame(animationId);
+          animationId = null;
+        }
+        
+        if (currentTool === 'brush' || currentTool === 'eraser') {
+          ctx.beginPath();
+          points = [];
+        } else if (currentTool === 'ruler') {
+          imageData = null;
+        }
+      }
+
+      // Optimized event handling for better trackpad performance
+      canvas.addEventListener('mousedown', startDrawing);
+      canvas.addEventListener('mousemove', draw, { passive: false });
+      canvas.addEventListener('mouseup', stopDrawing);
+      canvas.addEventListener('mouseout', stopDrawing);
+
+      // Touch events for mobile/trackpad with passive optimization
+      canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        startDrawing(e);
+      }, { passive: false });
+      
+      canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        draw(e);
+      }, { passive: false });
+      
+      canvas.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        stopDrawing();
+      }, { passive: false });
+
+      // Store drawing operations for SVG export
+      let drawingOperations = [];
+      
+      // Add operation to history
+      function addDrawingOperation(operation) {
+        drawingOperations.push(operation);
+      }
+      
+      // Save functions
+      function saveDrawing(format) {
+        const link = document.createElement('a');
+        const timestamp = new Date().getTime();
+        
+        switch(format) {
+          case 'png':
+            link.href = canvas.toDataURL('image/png');
+            link.download = `drawing_${timestamp}.png`;
+            break;
+            
+          case 'jpg':
+            // Create canvas with background color for JPG
+            const jpgCanvas = document.createElement('canvas');
+            const jpgCtx = jpgCanvas.getContext('2d');
+            jpgCanvas.width = canvas.width;
+            jpgCanvas.height = canvas.height;
+            
+            jpgCtx.fillStyle = currentBgColor === 'transparent' ? 'white' : currentBgColor;
+            jpgCtx.fillRect(0, 0, jpgCanvas.width, jpgCanvas.height);
+            jpgCtx.drawImage(canvas, 0, 0);
+            
+            link.href = jpgCanvas.toDataURL('image/jpeg', 0.9);
+            link.download = `drawing_${timestamp}.jpg`;
+            break;
+            
+          case 'webp':
+            // WebP format with background handling
+            const webpCanvas = document.createElement('canvas');
+            const webpCtx = webpCanvas.getContext('2d');
+            webpCanvas.width = canvas.width;
+            webpCanvas.height = canvas.height;
+            
+            if (currentBgColor !== 'transparent') {
+              webpCtx.fillStyle = currentBgColor;
+              webpCtx.fillRect(0, 0, webpCanvas.width, webpCanvas.height);
+            }
+            webpCtx.drawImage(canvas, 0, 0);
+            
+            link.href = webpCanvas.toDataURL('image/webp', 0.9);
+            link.download = `drawing_${timestamp}.webp`;
+            break;
+            
+          case 'svg':
+            // Generate SVG from canvas
+            const svgContent = generateSVG();
+            const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+            link.href = URL.createObjectURL(blob);
+            link.download = `drawing_${timestamp}.svg`;
+            break;
+            
+          case 'pdf':
+            // Convert canvas to PDF
+            generatePDF(timestamp);
+            document.getElementById('saveDropdown').classList.remove('show');
+            return;
+            
+          case 'highres':
+            // High resolution export (2x scale) with background
+            const highResCanvas = document.createElement('canvas');
+            const highResCtx = highResCanvas.getContext('2d');
+            highResCanvas.width = canvas.width * 2;
+            highResCanvas.height = canvas.height * 2;
+            
+            if (currentBgColor !== 'transparent') {
+              highResCtx.fillStyle = currentBgColor;
+              highResCtx.fillRect(0, 0, highResCanvas.width, highResCanvas.height);
+            }
+            
+            highResCtx.scale(2, 2);
+            highResCtx.drawImage(canvas, 0, 0);
+            
+            link.href = highResCanvas.toDataURL('image/png');
+            link.download = `drawing_${timestamp}_highres.png`;
+            break;
+        }
+        
+        link.click();
+        document.getElementById('saveDropdown').classList.remove('show');
+      }
+      
+      // Generate SVG from canvas with background
+      function generateSVG() {
+        const svgHeader = `<svg xmlns="http://www.w3.org/2000/svg" width="${canvas.width}" height="${canvas.height}" viewBox="0 0 ${canvas.width} ${canvas.height}">`;
+        const svgFooter = '</svg>';
+        
+        // Add background rectangle if not transparent
+        const bgRect = currentBgColor !== 'transparent' ? 
+          `<rect width="${canvas.width}" height="${canvas.height}" fill="${currentBgColor}"/>` : '';
+        
+        // Convert canvas to base64 image for SVG
+        const base64Data = canvas.toDataURL('image/png');
+        const svgImage = `<image href="${base64Data}" width="${canvas.width}" height="${canvas.height}"/>`;
+        
+        return svgHeader + bgRect + svgImage + svgFooter;
+      }
+      
+      // Generate PDF from canvas
+      function generatePDF(timestamp) {
+        // Create a simple PDF with embedded image
+        const imgData = canvas.toDataURL('image/png');
+        
+        // Create a white canvas for PDF background
+        const pdfCanvas = document.createElement('canvas');
+        const pdfCtx = pdfCanvas.getContext('2d');
+        
+        // Set A4 proportions (approximately)
+        const aspectRatio = canvas.width / canvas.height;
+        pdfCanvas.width = aspectRatio > 1 ? 842 : 595;
+        pdfCanvas.height = aspectRatio > 1 ? 595 : 842;
+        
+        // Fill with background color or white for PDF
+        pdfCtx.fillStyle = currentBgColor === 'transparent' ? 'white' : currentBgColor;
+        pdfCtx.fillRect(0, 0, pdfCanvas.width, pdfCanvas.height);
+        
+        // Calculate scaling to fit canvas in PDF
+        const scale = Math.min(pdfCanvas.width / canvas.width, pdfCanvas.height / canvas.height);
+        const scaledWidth = canvas.width * scale;
+        const scaledHeight = canvas.height * scale;
+        const x = (pdfCanvas.width - scaledWidth) / 2;
+        const y = (pdfCanvas.height - scaledHeight) / 2;
+        
+        // Draw the canvas centered in the PDF
+        pdfCtx.drawImage(canvas, x, y, scaledWidth, scaledHeight);
+        
+        // Save as high-quality PNG (PDF generation would require a library)
+        const link = document.createElement('a');
+        link.href = pdfCanvas.toDataURL('image/png', 1.0);
+        link.download = `drawing_${timestamp}_A4.png`;
+        link.click();
+      }
+
+      // Tool button events
+      brushBtn.addEventListener('click', () => setTool('brush'));
+      eraserBtn.addEventListener('click', () => setTool('eraser'));
+      rulerBtn.addEventListener('click', () => setTool('ruler'));
+
+      // Control events
+      brushSize.addEventListener('input', (e) => {
+        sizeDisplay.textContent = e.target.value + 'px';
+      });
+
+      // Background color events
+      bgColorPicker.addEventListener('change', (e) => {
+        setCanvasBackground(e.target.value);
+      });
+
+      clearBgBtn.addEventListener('click', () => {
+        // Set transparent background
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        currentBgColor = 'transparent';
+        canvas.style.backgroundColor = 'transparent';
+        bgColorPicker.value = '#ffffff';
+      });
+
+      clearBtn.addEventListener('click', () => {
+        if (confirm('Are you sure you want to clear the canvas?')) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          if (currentBgColor !== 'transparent') {
+            setCanvasBackground(currentBgColor);
+          }
+        }
+      });
+
+      // Save dropdown events
+      document.getElementById('saveBtn').addEventListener('click', () => {
+        const dropdown = document.getElementById('saveDropdown');
+        dropdown.classList.toggle('show');
+      });
+
+      document.getElementById('savePNG').addEventListener('click', () => {
+        saveDrawing('png');
+      });
+
+      document.getElementById('saveJPG').addEventListener('click', () => {
+        saveDrawing('jpg');
+      });
+
+      document.getElementById('saveWebP').addEventListener('click', () => {
+        saveDrawing('webp');
+      });
+
+      document.getElementById('saveSVG').addEventListener('click', () => {
+        saveDrawing('svg');
+      });
+
+      document.getElementById('savePDF').addEventListener('click', () => {
+        saveDrawing('pdf');
+      });
+
+      document.getElementById('saveHighRes').addEventListener('click', () => {
+        saveDrawing('highres');
+      });
+
+      // Close dropdown when clicking outside
+      window.addEventListener('click', (e) => {
+        if (!e.target.matches('.action-btn')) {
+          const dropdown = document.getElementById('saveDropdown');
+          if (dropdown.classList.contains('show')) {
+            dropdown.classList.remove('show');
+          }
+        }
+      });
+
+      // Prevent context menu on right-click
+      canvas.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+      });
+    </script>
+  </body>
+</html>
