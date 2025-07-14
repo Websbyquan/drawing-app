@@ -39,8 +39,8 @@ Built with pure **HTML**, **CSS**, and **JavaScript**:
 Made with ❤️ by **Anh Quan Hoang** — a student learning to build useful, fun tools from scratch.  
 Follow the journey or reach out:
 
-- GitHub: [@yourusername](https://github.com/yourusername)
-- Email: your.email@example.com
+- GitHub: Websbyquan(https://github.com/Websbyquan)
+- Email: hoang_anh_quan@students.edu.sg
 
 *This is my first fully deployed app. Feedback is welcome!*
 
@@ -48,7 +48,5 @@ Follow the journey or reach out:
 
 ## 📊 Analytics
 
-This app uses [Plausible Analytics](https://plausible.io) to track anonymous page views and user activity.  
-No personal data is collected — it's just to improve performance and understand usage.
 
 ---
